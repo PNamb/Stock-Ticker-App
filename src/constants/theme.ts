@@ -1,65 +1,65 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import '@/global.css';
-
-import { Platform } from 'react-native';
-
 export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+  background: {
+    widget: "#191818"
   },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+  theme: {
+    dark: "#0f0e0e",
+    light: "#e1d9d9",
+    pressed: "#292727",
+    up: "#44dc15",
+    down: "#da4307"
   },
-} as const;
-
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
-
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+  icons: {
+    bottomTabIcon: "#ffffff9a",
+    home: "#44dc15",
+    watchlist: "#e7d320",
+    search: "#db5a04",
+    portfolio: "#d91515",
+    settings: "#3293c0",
+    mostActiveFlame: "#dfcf19"
   },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
+  symbol: {
+    sectionTitle: "#9c9494",
+    volume: "#8d8686",
+    borderTop: "#322f2f",
+    active: "#2a2727",
+    chevron: "#6b6666"
+  }
+}
 
 export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
+  xxs: 4,
+  xs: 6,
+  sm: 8,
+  md: 10,
+  lg: 12,
+  xl: 14,
+  xxl: 16,
+  super: 20
+}
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+export const Radius = {
+  xxs: 4,
+  xs: 6,
+  sm: 8,
+  md: 10,
+  lg: 12,
+  xl: 14,
+  xxl: 16,
+  super: 20
+}
+
+export const Typography = {
+  size: {
+    sm: 11,
+    md: 14,
+    lg: 16,
+    xl: 20,
+    xxl: 24
+  },
+  weight: {
+    normal: "500",
+    bold: "700",
+    extraBold: "900"
+  }
+}
