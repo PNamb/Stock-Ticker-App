@@ -1,10 +1,9 @@
 import { Colors, Radius, Spacing, Typography } from "@/constants/theme";
-import { HeaderTitle } from "expo-router/build/react-navigation";
 import { StyleSheet, View, Text, ScrollView, Pressable, Dimensions } from "react-native";
 import Art, { flameArt, trendingDownArt, trendingUpArt } from "@/assets/svgArt";
 import StockLineChart from "@/components/StockLineChart"
-import { Component, useEffect, useState } from "react";
 import { useAppSettings } from "@/contexts/AppContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const {width} = Dimensions.get("window")
 
@@ -13,7 +12,7 @@ const INDEXES = [
     {symbol: "S&P 500", value: "6,412.30", change: 0.64},
     {symbol: "Nasdaq", value: "21,-408.90", change: -0.71},
     {symbol: "NYSE comp", value: "24,758.62", change: 0.30},
-    {symbol: "ADGS", value: "10,000", change: 100.2}
+    {symbol: "Dow 300", value: "10,000", change: 100.2}
 ]
 
 const GAINERS = [
@@ -76,7 +75,7 @@ function IndexCard({item, onPress = null}) {
             <Text style = {styles.indexSymbol}>{item.symbol}</Text>
             <Text style = {styles.indexValue}>{item.value}</Text>
             <ChangeText value = {item.change} />
-            {< StockLineChart/>}
+            < StockLineChart/>
         </Pressable>
     )
 }
@@ -90,17 +89,17 @@ function MoverRow({item}) {
     )
 }
 
-function IndexesSection() {
+export function IndexesSection({data = INDEXES}) {
     return (
         <ScrollView horizontal showsHorizontalScrollIndicator = {false} contentContainerStyle = {styles.indexStrip}>
-            {INDEXES.map((item) => (
+            {data.map((item) => (
                 <IndexCard key = {item.symbol} item={item}/>
             ))}
         </ScrollView>
     )
 }
 
-function MoversSection() {
+export function MoversSection({gainers = GAINERS, losers = LOSERS}) {
     const {settings} = useAppSettings()
     const isStacked = settings.layout !== "Side by side"
     const limit = Number(settings.rowsPerList ?? 3)
@@ -113,7 +112,7 @@ function MoversSection() {
                     <Text style = {styles.sectionLabel}>Top gainers</Text>
                 </View>
 
-                {GAINERS.slice(0, limit).map((item) => (
+                {gainers.slice(0, limit).map((item) => (
                     <MoverRow key = {item.symbol} item = {item} />
                 ))}
             </View>
@@ -124,7 +123,7 @@ function MoversSection() {
                     <View style = {{width: Spacing.xl}} />
                     <Text style = {styles.sectionLabel}>Top losers</Text>
                 </View>
-                {LOSERS.slice(0, limit).map((item) => (
+                {losers.slice(0, limit).map((item) => (
                     <MoverRow key = {item.symbol} item = {item} />
                 ))}
             </View>
@@ -132,9 +131,9 @@ function MoversSection() {
     )
 }
 
-function MostActiveSection() {
+export function MostActiveSection({data = MOST_ACTIVE}) {
     return (
-        <View style = {styles.section}>
+        <View>
             <View style = {{flexDirection: "row"}}>
                 <Art art = {flameArt} box = {"0 0 24 24"} size = {24} color = {Colors.icons.mostActiveFlame} isStroke = {true} />
                 <View style = {styles.spacer} />
@@ -142,7 +141,7 @@ function MostActiveSection() {
             </View>
             
             <View style = {styles.activeCard}>
-                {MOST_ACTIVE.map((item) => (
+                {data.map((item) => (
                     <View key = {item.symbol} style = {styles.activeRow}>
                         <View>
                             <Text style = {styles.moverSymbol}>{item.symbol}</Text>
@@ -160,10 +159,10 @@ function MostActiveSection() {
 
 export default function HomeScreen() {
     const {settings} = useAppSettings()
+    const insets = useSafeAreaInsets()
     const order = settings.sectionOrder ?? ["indexes", "movers", "mostActive"]
-    console.log("home settings:", settings)
     return (
-        <ScrollView style = {styles.container} contentContainerStyle = {{paddingBottom: 24}}>
+        <ScrollView style = {styles.container} contentContainerStyle = {{paddingBottom: 80 + insets.bottom, paddingHorizontal: Spacing.xxl, gap: Spacing.super}}>
             <View style = {styles.header}>
                 <Text style = {styles.headerTitle}>Markets</Text>
                 <View style = {styles.statusPill}>
@@ -183,7 +182,7 @@ export default function HomeScreen() {
     )
 }
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.theme.dark
@@ -195,7 +194,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: Spacing.xxl,
         paddingTop: Spacing.xxl,
         paddingBottom: Spacing.sm
     },
@@ -224,8 +222,6 @@ const styles = StyleSheet.create({
         fontSize: Typography.size.sm
     },
     indexStrip: {
-        paddingHorizontal: Spacing.xxl,
-        paddingVertical: Spacing.sm,
         gap: Spacing.md
     },
     indexCard: {
@@ -247,8 +243,6 @@ const styles = StyleSheet.create({
     },
     moversContainer: {
         justifyContent: "space-between",
-        paddingHorizontal: Spacing.xxl,
-        paddingTop: Spacing.lg,
     },
     moversCard: {
         flex: 1,
@@ -271,16 +265,13 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         paddingVertical: Spacing.xs,
         paddingHorizontal: Spacing.xxl,
+        borderTopWidth: 0.5,
+        borderTopColor: Colors.symbol.borderTop,
         maxWidth: 180
     }, 
     moverSymbol: {
         color: Colors.theme.light,
         fontSize: Typography.size.md
-    },
-    section: {
-        paddingHorizontal: Spacing.xxl,
-        paddingTop: Spacing.xxl,
-        paddingBottom: Spacing.lg
     },
     activeCard: {
         backgroundColor: Colors.background.widget,

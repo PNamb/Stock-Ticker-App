@@ -43,8 +43,9 @@ function SettingsRow({label, subLabel, value, onPress, type = "nav", switchValue
         }
     })
     return (
-        <Animated.View layout={LinearTransition}>
+        <Animated.View layout={LinearTransition} style = {{backgroundColor: Colors.background.widget}}>
             <Pressable style = {({pressed}) => [styles.row, {backgroundColor: pressed ? Colors.theme.pressed : Colors.background.widget}]} onPress={handlePress} disabled = {type === "switch"}>
+                <View style = {styles.rowBorder} />
                 <View style = {{flex: 1}}>
                     <Text style = {styles.rowLabel}>{label}</Text>
                     {subLabel && <Text style = {styles.rowSubLabel}>{subLabel}</Text>}
@@ -106,14 +107,7 @@ export default function SettingsScreen() {
     const displaySettingsRow = (settingsList) => (
         settingsList.map((setting) => (
             <SettingsRow key = {setting.label}
-                label = {setting.label}
-                subLabel = {setting.subLabel ?? null}
-                value = {setting.value ?? null}
-                onPress = {setting.onPress ?? null}
-                type = {setting.type ?? "nav"}
-                switchValue = {setting.switchValue ?? null}
-                onSwitchChange = {setting.onSwitchChange ?? null}
-                options = {setting.options ?? null}
+                {...setting}
                 isExpanded = {expandedKey === setting.key}
                 onToggle = {() => toggleRow(setting.key)}
                 onSelectOptions = {(val) => handleSelectOptions(setting.key, val)}
@@ -124,7 +118,7 @@ export default function SettingsScreen() {
     const HOMESCREEN_SETTINGS = [
         { key: "sectionOrder", label: "Section order", subLabel: "Drag to Reorder", onPress: () => router.push("/sectionOrder") },
         { key: "layout", label: "Gainers/losers layout", value: settings.layout ?? DEFAULT_SETTINGS.layout, options: ["Side by side", "Stacked"] },
-        { key: "universe", label: "Movers Universe", value: settings.universe ?? DEFAULT_SETTINGS.universe, options: ["S&P 500", "Nasdaq 100", "Dow 30"] },
+        { key: "universe", label: "Movers Universe", value: settings.universe ?? DEFAULT_SETTINGS.universe, options: ["S&P 500", "Nasdaq 100", "NYSE comp", "Dow 30"] },
         { key: "rowsPerList", label: "Rows per List", value: String(settings.rowsPerList ?? DEFAULT_SETTINGS.rowsPerList), options: ["3", "5", "10"] },
         { label: "Show gainers/losers", type: "switch", switchValue: settings.showMovers, onSwitchChange: (v) => updateSettings("showMovers", v) },
         { label: "Show most active", type: "switch", switchValue: settings.showMostActive, onSwitchChange: (v) => updateSettings("showMostActive", v) },
@@ -185,6 +179,7 @@ const styles = StyleSheet.create({
     sectionCard: {
         borderRadius: Radius.lg,
         overflow: "hidden",
+        backgroundColor: Colors.background.widget
     },
     row: {
         minHeight: 60,
@@ -193,8 +188,15 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         paddingHorizontal: Spacing.xl,
         paddingVertical: Spacing.lg,
-        borderTopWidth: 0.5,
-        borderTopColor: Colors.symbol.borderTop
+        
+    },
+    rowBorder: {
+        position: "absolute",
+        top: 0,
+        left: Spacing.xl,
+        right: Spacing.xl,
+        height: 0.5,
+        backgroundColor: Colors.symbol.borderTop,
     },
     rowLabel: {
         color: Colors.theme.light,
@@ -214,8 +216,8 @@ const styles = StyleSheet.create({
         fontSize: 12
     },
     panel: {
-        borderTopWidth: 0.5,
-        borderTopColor: Colors.symbol.borderTop,
+        borderTopWidth: 1,
+        borderTopColor: Colors.background.widget,
     },
     optionRow: {
         minHeight: 48,
@@ -226,7 +228,7 @@ const styles = StyleSheet.create({
         paddingLeft: 26,
         paddingVertical: Spacing.md,
         borderTopWidth: 0.5,
-        borderTopColor: Colors.symbol.borderTop
+        borderTopColor: Colors.background.widget
     },
     optionText: {
         color: Colors.theme.light,
