@@ -9,10 +9,9 @@ export const DEFAULT_SETTINGS = {
     showMovers: true,
     rowsPerList: "5",
     showMostActive: true,
-    liveUpdates: true,
+    refreshToUpdate: true,
     sectionOrder: ["indexes", "movers", "mostActive"],
     layout: "Side by side",
-    universe: "S&P 500",
     showIndices: true
 }
 

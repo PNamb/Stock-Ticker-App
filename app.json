@@ -33,7 +33,8 @@
           "imageWidth": 76
         }
       ],
-      "react-native-haptic-feedback"
+      "react-native-haptic-feedback",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,

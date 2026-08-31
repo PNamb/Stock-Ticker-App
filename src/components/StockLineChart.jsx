@@ -1,22 +1,21 @@
-import { Colors } from "@/constants/theme";
-import React from "react";
-import {Dimensions} from "react-native"
+import {Colors} from "../constants/theme"
 import {LineChart} from "react-native-wagmi-charts"
+import { Dimensions} from "react-native"
 
 const {width} = Dimensions.get("window")
 
-const mockData = [
-    {timestamp: 1625945400000, value: 33575.25},
-    {timestamp: 1625946300000, value: 33545.25},
-    {timestamp: 1625947200000, value: 33510.25},
-    {timestamp: 1625948100000, value: 33215.25}
-]
-
-export default function StockLineChart({height = 60}) {
+export default function StockLineChart({data, height = width / 1.1}) {
+    console.log(data)
+    const isUp = data.length > 1 && data.at(-1).value >= data.at(0).value
     return (
-        <LineChart.Provider data = {mockData}>
-            <LineChart width = {width/2} height = {height}>
-                <LineChart.Path color = {Colors.theme.up} width = {3} />
+        <LineChart.Provider data={data}>
+            <LineChart width={width / 1.088} height={height}>
+                <LineChart.Path color={isUp ? Colors.theme.up : Colors.theme.down} width={3}>
+                    <LineChart.Gradient />
+                </LineChart.Path>
+                <LineChart.CursorCrosshair color = {Colors.theme.light}>
+                    <LineChart.Tooltip textStyle = {{color: Colors.theme.light}} />
+                </LineChart.CursorCrosshair>
             </LineChart>
         </LineChart.Provider>
     )

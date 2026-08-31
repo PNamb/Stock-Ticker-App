@@ -4,41 +4,16 @@ import {Colors, Radius, Spacing, Typography} from "../constants/theme"
 import { useAppSettings } from "@/contexts/AppContext"
 import { useState } from "react"
 import { IndexesSection, MoversSection, MostActiveSection } from "./HomeScreen"
+import { useMarketData } from "@/hooks/useMarketData"
 
-const PREVIEW_INDEXES = [
-    {symbol: "TEST1", value: "10,000", change: 1.25},
-    {symbol: "TEST2", value: "10,000", change: -0.80},
-]
-const PREVIEW_GAINERS = [
-    {symbol: "TEST3", change: 12.34},
-    {symbol: "TEST4", change: 8.21},
-    {symbol: "TEST5", change: 12.34},
-    {symbol: "TEST6", change: 8.21},
-    {symbol: "TEST7", change: 12.34},
-    {symbol: "TEST8", change: 8.21},
-]
-const PREVIEW_LOSERS = [
-    {symbol: "TEST9", change: -12.34},
-    {symbol: "TEST10", change: -8.21},
-    {symbol: "TEST15", change: -8.21},
-    {symbol: "TEST16", change: -8.21},
-    {symbol: "TEST17", change: -8.21},
-    {symbol: "TEST18", change: -8.21}
-]
-const PREVIEW_ACTIVE = [
-    {symbol: "TEST11", volume: "10.0M", change: 1.25},
-    {symbol: "TEST12", volume: "10.0M", change: -0.80},
-    {symbol: "TEST13", volume: "10.0M", change: 1.25},
-    {symbol: "TEST14", volume: "10.0M", change: -0.80}
-]
-
-const SCALE = 0.85
+const SCALE = 0.9
 
 function SectionPreview({id}) {
+    const {indexes, gainers, losers, mostActive} = useMarketData()
     let content
-    if (id === "indexes") content = <IndexesSection data={PREVIEW_INDEXES} />
-    else if (id === "movers") content = <MoversSection gainers={PREVIEW_GAINERS} losers={PREVIEW_LOSERS} />
-    else if (id === "mostActive") content = <MostActiveSection data={PREVIEW_ACTIVE} />
+    if (id === "indexes") content = <IndexesSection data={indexes} scrollEnabled = {false} />
+    else if (id === "movers") content = <MoversSection gainers={gainers} losers={losers} scrollEnabled = {false} />
+    else if (id === "mostActive") content = <MostActiveSection data={mostActive} scrollEnabled = {false} />
     else return null
 
     return (
@@ -121,7 +96,6 @@ const styles = StyleSheet.create({
     },
     previewClip: {
         overflow: "hidden",
-        maxHeight: 250 //tune
     },
     previewInner: {
         transformOrigin: "center"

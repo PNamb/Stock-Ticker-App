@@ -1,58 +1,26 @@
 import { Colors, Radius, Spacing, Typography } from "@/constants/theme";
-import { StyleSheet, View, Text, ScrollView, Pressable, Dimensions } from "react-native";
+import { StyleSheet, View, Text, ScrollView, Pressable, Dimensions, FlatList, RefreshControl } from "react-native";
 import Art, { flameArt, trendingDownArt, trendingUpArt } from "@/assets/svgArt";
-import StockLineChart from "@/components/StockLineChart"
+import MiniLineChart from "@/components/MiniLineChart"
 import { useAppSettings } from "@/contexts/AppContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {useMarketData} from "@/hooks/useMarketData"
+import { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 
 const {width} = Dimensions.get("window")
 
-//placeholder data
-const INDEXES = [
-    {symbol: "S&P 500", value: "6,412.30", change: 0.64},
-    {symbol: "Nasdaq", value: "21,-408.90", change: -0.71},
-    {symbol: "NYSE comp", value: "24,758.62", change: 0.30},
-    {symbol: "Dow 300", value: "10,000", change: 100.2}
-]
+const MOVER_ROW_HEIGHT = 35
+const ACTIVE_ROW_HEIGHT = 60
 
-const GAINERS = [
-    {symbol: "TEST1", change: 34.14},
-    {symbol: "TEST2", change: 27.97},
-    {symbol: "TEST3", change: 34.14},
-    {symbol: "TEST4", change: 27.97},
-    {symbol: "TEST5", change: 34.14},
-    {symbol: "TEST6", change: 27.97},
-    {symbol: "TEST7", change: 34.14},
-    {symbol: "TEST8", change: 27.97},
-    {symbol: "TEST9", change: 34.14},
-    {symbol: "TEST10", change: 27.97},
-    {symbol: "TEST11", change: 34.14},
-    {symbol: "TEST12", change: 27.97},
-]
+//time logic is temporary; will add to engine files later
+const time = new Date().toLocaleString("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric",
+    hour12: false
+})
 
-const LOSERS = [
-    {symbol: "TEST13", change: -34.14},
-    {symbol: "TEST14", change: -27.97},
-    {symbol: "TEST15", change: -34.14},
-    {symbol: "TEST16", change: -27.97},
-    {symbol: "TEST17", change: -34.14},
-    {symbol: "TEST18", change: -27.97},
-    {symbol: "TEST19", change: -34.14},
-    {symbol: "TEST20", change: -27.97},
-    {symbol: "TEST21", change: -34.14},
-    {symbol: "TEST22", change: -27.97},
-    {symbol: "TEST23", change: -34.14},
-    {symbol: "TEST24", change: -27.97},
-]
-
-const MOST_ACTIVE = [
-    { symbol: "AAPL", volume: "84.2M", change: 1.2 },
-    { symbol: "TSLA", volume: "71.5M", change: -0.8 },
-    { symbol: "SPY", volume: "65.9M", change: 0.6 },
-    { symbol: "AsAPL", volume: "84.2M", change: 1.2 },
-    { symbol: "TSsLA", volume: "71.5M", change: -0.8 },
-    { symbol: "SsPY", volume: "65.9M", change: 0.6 }
-]
+const hour = parseInt(time, 10)
 
 const SECTIONS = {
     indexes: {Component: IndexesSection, settingsKey: "showIndices"},
@@ -60,11 +28,14 @@ const SECTIONS = {
     mostActive: {Component: MostActiveSection, settingsKey: "showMostActive"}
 }
 
-function ChangeText({value}) {
+function ChangeText({changePercentage, changeAbsolute}) {
+    const {settings} = useAppSettings()
+    const isAbsolute = settings.format === "Absolute"
+    const value = isAbsolute ? changeAbsolute : changePercentage
     const isUp = value >= 0
     return (
         <Text style = {{color: isUp ? Colors.theme.up : Colors.theme.down}}>
-            {isUp ? "+" : ""}{value.toFixed(2)}%
+            {isUp ? "+" : ""}{value.toFixed(2)}{isAbsolute ? "" : "%"}
         </Text>
     )
 }
@@ -74,8 +45,8 @@ function IndexCard({item, onPress = null}) {
         <Pressable style = {styles.indexCard} onPress = {onPress}>
             <Text style = {styles.indexSymbol}>{item.symbol}</Text>
             <Text style = {styles.indexValue}>{item.value}</Text>
-            <ChangeText value = {item.change} />
-            < StockLineChart/>
+            <ChangeText changePercentage = {item.changePercentage} changeAbsolute = {item.changeAbsolute} />
+            < MiniLineChart isUp={item.changePercentage >= 0}/>
         </Pressable>
     )
 }
@@ -84,25 +55,42 @@ function MoverRow({item}) {
     return (
         <View style = {styles.moverRow}>
             <Text style = {styles.moverSymbol}>{item.symbol}</Text>
-            <ChangeText value = {item.change} />
+            <ChangeText changePercentage = {item.changePercentage} changeAbsolute = {item.changeAbsolute} />
         </View>
     )
 }
 
-export function IndexesSection({data = INDEXES}) {
+function MostActiveRow({item, onPress = null}) {
     return (
-        <ScrollView horizontal showsHorizontalScrollIndicator = {false} contentContainerStyle = {styles.indexStrip}>
+        <Pressable style = {styles.activeRow} onPress={onPress}>
+            <View>
+                <Text style = {styles.moverSymbol}>{item.symbol}</Text>
+                <Text style = {styles.volumeText}>Vol {item.volume}</Text>
+            </View>
+
+            <MiniLineChart isUp={item.changePercentage >= 0}/>
+            <ChangeText changePercentage = {item.changePercentage} changeAbsolute = {item.changeAbsolute} />
+        </Pressable>
+    )
+}
+
+//wire into FMP rather than Massive; Massive doesn't let you access charting data with 
+export function IndexesSection({data = INDEXES, scrollEnabled = true}) {
+    const router = useRouter()
+    return (
+        <ScrollView horizontal showsHorizontalScrollIndicator = {false} contentContainerStyle = {styles.indexStrip} scrollEnabled = {scrollEnabled}>
             {data.map((item) => (
-                <IndexCard key = {item.symbol} item={item}/>
+                <IndexCard key = {item.symbol} item={item} onPress={scrollEnabled ? () => router.push(`/chart/${item.symbol}`) : null}/>
             ))}
         </ScrollView>
     )
 }
 
-export function MoversSection({gainers = GAINERS, losers = LOSERS}) {
+export function MoversSection({gainers = GAINERS, losers = LOSERS, scrollEnabled = true}) {
     const {settings} = useAppSettings()
     const isStacked = settings.layout !== "Side by side"
     const limit = Number(settings.rowsPerList ?? 3)
+    const listHeight = limit * MOVER_ROW_HEIGHT
     return (
         <View style = {[styles.moversContainer, {flexDirection: isStacked ? "column" : "row"}]}>
             <View style = {[styles.moversCard, isStacked && styles.moversCardStacked, {marginRight: isStacked ? 0 : Spacing.sm, marginBottom: isStacked ? Spacing.sm : 0}]}>
@@ -112,9 +100,11 @@ export function MoversSection({gainers = GAINERS, losers = LOSERS}) {
                     <Text style = {styles.sectionLabel}>Top gainers</Text>
                 </View>
 
-                {gainers.slice(0, limit).map((item) => (
-                    <MoverRow key = {item.symbol} item = {item} />
-                ))}
+                <ScrollView style = {{height: listHeight}} nestedScrollEnabled showsVerticalScrollIndicator = {false} scrollEnabled = {scrollEnabled}>
+                    {gainers.map((item) => (
+                        <MoverRow key = {item.symbol} item={item} />
+                    ))}
+                </ScrollView>
             </View>
 
             <View style = {[styles.moversCard, isStacked && styles.moversCardStacked, {marginLeft: isStacked ? 0 : Spacing.sm}]}>
@@ -123,15 +113,32 @@ export function MoversSection({gainers = GAINERS, losers = LOSERS}) {
                     <View style = {{width: Spacing.xl}} />
                     <Text style = {styles.sectionLabel}>Top losers</Text>
                 </View>
-                {losers.slice(0, limit).map((item) => (
-                    <MoverRow key = {item.symbol} item = {item} />
-                ))}
+
+                <ScrollView style = {{height: listHeight}} nestedScrollEnabled showsVerticalScrollIndicator = {false} scrollEnabled = {scrollEnabled}>
+                    {losers.map((item) => (
+                        <MoverRow key = {item.symbol} item={item} />
+                    ))}
+                </ScrollView>
             </View>
         </View>
     )
 }
 
-export function MostActiveSection({data = MOST_ACTIVE}) {
+export function MostActiveSection({data = MOST_ACTIVE, scrollEnabled = true}) {
+    const {settings} = useAppSettings()
+    const router = useRouter()
+    const limit = Number(settings.rowsPerList ?? 3)
+    const listHeight = limit * ACTIVE_ROW_HEIGHT
+
+    const [renderCount, setRenderCount] = useState(limit)
+
+    useEffect(() => {
+        if (renderCount < data.length) {
+            const timer = setTimeout(() => setRenderCount(data.length), 500);
+            return () => clearTimeout(timer);
+        }
+    }, [])
+
     return (
         <View>
             <View style = {{flexDirection: "row"}}>
@@ -139,46 +146,87 @@ export function MostActiveSection({data = MOST_ACTIVE}) {
                 <View style = {styles.spacer} />
                 <Text style = {styles.sectionLabel}>Most Active</Text>
             </View>
-            
+
             <View style = {styles.activeCard}>
-                {data.map((item) => (
-                    <View key = {item.symbol} style = {styles.activeRow}>
-                        <View>
-                            <Text style = {styles.moverSymbol}>{item.symbol}</Text>
-                            <Text style = {styles.volumeText}>Vol {item.volume}</Text>
-                        </View>
-                        <StockLineChart height = {30} />
-                        <ChangeText value = {item.change} />
-                    </View>
-                ))}
+                <ScrollView style = {{height: listHeight}} nestedScrollEnabled showsVerticalScrollIndicator = {false} scrollEnabled = {scrollEnabled}>
+                    {data.map((item) => (
+                        <MostActiveRow key={item.symbol} item={item} onPress={scrollEnabled ? () => router.push(`/chart/${item.symbol}`) : null}/>
+                    ))}
+                </ScrollView>
             </View>
         </View>
     )
 }
 
-
 export default function HomeScreen() {
     const {settings} = useAppSettings()
     const insets = useSafeAreaInsets()
-    const order = settings.sectionOrder ?? ["indexes", "movers", "mostActive"]
-    return (
-        <ScrollView style = {styles.container} contentContainerStyle = {{paddingBottom: 80 + insets.bottom, paddingHorizontal: Spacing.xxl, gap: Spacing.super}}>
-            <View style = {styles.header}>
-                <Text style = {styles.headerTitle}>Markets</Text>
-                <View style = {styles.statusPill}>
-                    <View style = {styles.statusDot} />
-                    <Text style = {styles.statusText}>Open</Text>
-                </View>
-            </View>
+    const {indexes, gainers, losers, mostActive, isLoading, error, refresh} = useMarketData()
+    const [isRefreshing, setIsRefreshing] = useState(false)
 
-            {order.map((id) => {
-                const section = SECTIONS[id]
-                if (!section) return null
-                if (section.settingsKey && !settings[section.settingsKey]) return null
-                const {Component} = section
-                return <Component key = {id} />
-            })}
-        </ScrollView>
+    const order = settings.sectionOrder ?? ["indexes", "movers", "mostActive"]
+    const isOpen = hour > 10 && hour < 16
+
+    const onRefresh = async () => {
+        setIsRefreshing(true)
+        try {
+            await refresh()
+        } finally {
+            setIsRefreshing(false)
+        }
+    }
+
+    const visibileSections = order.filter((id) => {
+        const section = SECTIONS[id]
+        if (!section) return false
+        if (section.settingsKey && !settings[section.settingsKey]) return false
+        return true
+    })
+
+    const renderSection = ({item: id}) => {
+        const {Component} = SECTIONS[id]
+        if (id === "movers") return <Component gainers={gainers} losers={losers} />
+        if (id === "mostActive") return <Component data={mostActive} />
+        if (id === "indexes") return <Component data={indexes} />
+        return <Component />
+    }
+
+    return (
+        <FlatList 
+            style = {styles.container} 
+            contentContainerStyle = {{paddingBottom: 80 + insets.bottom, paddingHorizontal: Spacing.xxl, gap: Spacing.super}}
+            data={visibileSections}
+            keyExtractor={(id) => id}
+            renderItem={renderSection}
+            ListHeaderComponent={
+                <>
+                    <View style = {styles.header}>
+                        <Text style = {styles.headerTitle}>Markets</Text>
+                        <View style = {styles.statusPill}>
+                            <View style = {[styles.statusDot, {backgroundColor: isOpen ? Colors.theme.up : Colors.theme.pressed}]} />
+                            <Text style = {styles.statusText}>Open</Text>
+                        </View>
+                    </View>
+                    {error && (
+                        <View>
+                            <Text>Couldn't load market data</Text>
+                            {console.log("[HOMESCREEN] MARKET ERROR", indexes)}
+                        </View>
+                    )}
+                </>
+            }
+            refreshControl={
+                settings.refreshToUpdate ? (
+                    <RefreshControl
+                        refreshing = {isRefreshing}
+                        onRefresh={onRefresh}
+                        tintColor={Colors.theme.dark}
+                        colors={[Colors.theme.up, Colors.theme.down]}
+                        progressBackgroundColor={Colors.theme.dark}
+                    />
+                ) : undefined
+            }
+        />
     )
 }
 
@@ -215,7 +263,6 @@ export const styles = StyleSheet.create({
         width: 6,
         height: 6,
         borderRadius: 3,
-        backgroundColor: Colors.theme.up
     },
     statusText: {
         color: "#c7bfbf",
@@ -228,7 +275,8 @@ export const styles = StyleSheet.create({
         backgroundColor: Colors.background.widget,
         borderRadius: Radius.lg,
         padding: Spacing.lg,
-        minWidth: 120
+        minWidth: 120,
+        // maxWidth: 250
     },
     indexSymbol: {
         color: Colors.theme.light,
@@ -276,7 +324,7 @@ export const styles = StyleSheet.create({
     activeCard: {
         backgroundColor: Colors.background.widget,
         borderRadius: Radius.lg,
-        paddingHorizontal: Spacing.lg
+        paddingHorizontal: Spacing.lg,
     },
     activeRow: {
         flexDirection: "row",

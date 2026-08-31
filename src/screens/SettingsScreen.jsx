@@ -107,7 +107,14 @@ export default function SettingsScreen() {
     const displaySettingsRow = (settingsList) => (
         settingsList.map((setting) => (
             <SettingsRow key = {setting.label}
-                {...setting}
+                label = {setting.label}
+                subLabel = {setting.subLabel ?? null}
+                value = {setting.value ?? null}
+                onPress = {setting.onPress ?? null}
+                type = {setting.type ?? "nav"}
+                switchValue = {setting.switchValue ?? null}
+                onSwitchChange = {setting.onSwitchChange ?? null}
+                options = {setting.options ?? null}
                 isExpanded = {expandedKey === setting.key}
                 onToggle = {() => toggleRow(setting.key)}
                 onSelectOptions = {(val) => handleSelectOptions(setting.key, val)}
@@ -118,16 +125,15 @@ export default function SettingsScreen() {
     const HOMESCREEN_SETTINGS = [
         { key: "sectionOrder", label: "Section order", subLabel: "Drag to Reorder", onPress: () => router.push("/sectionOrder") },
         { key: "layout", label: "Gainers/losers layout", value: settings.layout ?? DEFAULT_SETTINGS.layout, options: ["Side by side", "Stacked"] },
-        { key: "universe", label: "Movers Universe", value: settings.universe ?? DEFAULT_SETTINGS.universe, options: ["S&P 500", "Nasdaq 100", "NYSE comp", "Dow 30"] },
-        { key: "rowsPerList", label: "Rows per List", value: String(settings.rowsPerList ?? DEFAULT_SETTINGS.rowsPerList), options: ["3", "5", "10"] },
+        { key: "rowsPerList", label: "Rows per list", value: String(settings.rowsPerList ?? DEFAULT_SETTINGS.rowsPerList), options: ["3", "5", "10"] },
         { label: "Show gainers/losers", type: "switch", switchValue: settings.showMovers, onSwitchChange: (v) => updateSettings("showMovers", v) },
         { label: "Show most active", type: "switch", switchValue: settings.showMostActive, onSwitchChange: (v) => updateSettings("showMostActive", v) },
-        { label: "Show Indexes", type: "switch", switchValue: settings.showIndices, onSwitchChange: (v) => updateSettings("showIndices", v) }
+        { label: "Show indexes", type: "switch", switchValue: settings.showIndices, onSwitchChange: (v) => updateSettings("showIndices", v) }
     ];
 
     const DISPLAY_SETTINGS = [
         {key: "format", label: "Change format", value: settings.format ?? DEFAULT_SETTINGS.format, options: ["Percent", "Absolute"]},
-        {label: "Live updates", type: "switch", switchValue: settings.liveUpdates, onSwitchChange: (v) => updateSettings("liveUpdates", v)}
+        {label: "Refresh to update", type: "switch", switchValue: settings.refreshToUpdate, onSwitchChange: (v) => updateSettings("refreshToUpdate", v)}
     ]
 
 

@@ -11,6 +11,7 @@ export default function Layout() {
         <StatusBar hidden />
           <Stack screenOptions={{ headerShown: false }} initialRouteName="(tabs)">
             <Stack.Screen name="sectionOrder" options={{animation: "slide_from_right"}} />
+            <Stack.Screen name="chart/[symbol]" options={{animation: "slide_from_right"}} />
           </Stack>
       </AppProvider>
     </GestureHandlerRootView>

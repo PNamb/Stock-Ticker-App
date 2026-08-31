@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { act, useRef, useState } from "react";
 import { View, StyleSheet, NativeSyntheticEvent } from "react-native";
 import PagerView from "react-native-pager-view"
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,6 +23,7 @@ const TABS = [
 
 const SCREENS = [Home, WatchList, Search, Portfolio, Settings]
 
+//add loading screens later
 export default function TabLayout() {
     const insets = useSafeAreaInsets()
     const [activeIndex, setActiveIndex] = useState(0)
@@ -46,7 +47,7 @@ export default function TabLayout() {
             >
                 {SCREENS.map((Screen, i) => (
                     <View key = {i} style = {{flex: 1}}>
-                        <Screen />
+                        {i === activeIndex && <Screen />}
                     </View>
                 ))}
             </PagerView>
